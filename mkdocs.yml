@@ -1,0 +1,4 @@
+site_name: WRCCDC Prep
+theme: material
+markdown_extensions:
+  - admonition
