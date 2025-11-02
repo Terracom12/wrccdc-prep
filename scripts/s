@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+case "$-" in
+*i*) ;;
+*)
+    echo "Don't run me, source me" >&2
+    exit 1
+    ;;
+esac
+
+export WRCCDC_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+
+ap() {
+    [[ $(pwd) =~ .*wrccdc.* ]] && (
+        cd "$WRCCDC_DIR/ansible" || { echo "Failed to cd $WRCCDC_DIR ??" && exit; }
+        ansible-playbook "$@"
+    )
+}
+
+if command -v yq &>/dev/null; then
+    readarray -t vars < <(yq '.. | .hosts? | select(.) | to_entries | .[] | select(.value) | "\(.key)=\(.value.ansible_host)"' inventory)
+
+    echo "Declaring: ${vars[*]}"
+
+    declare -x "${vars[@]}"
+else
+    >&2 echo "'yq' command does not exist; failed to set up host aliases"
+fi
